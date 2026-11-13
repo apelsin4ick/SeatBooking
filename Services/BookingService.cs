@@ -16,22 +16,32 @@ public class BookingService
         var seat = _hall.Seats
             .FirstOrDefault(s => s.Number == seatNumber);
 
-        if (seat == null)
-        {
-            Console.WriteLine("Место не найдено.");
+        if (seat == null || seat.Status == SeatStatus.Booked)
             return false;
-        }
-
-        if (seat.Status == SeatStatus.Booked)
-        {
-            Console.WriteLine("Место уже занято.");
-            return false;
-        }
 
         seat.Status = SeatStatus.Booked;
 
         Console.WriteLine(
-            $"{customer} забронировал место {seatNumber}.");
+            $"{customer} забронировал место {seatNumber}");
+
+        return true;
+    }
+
+    public async Task<bool> BookWithRaceCondition(
+        int seatNumber, string customer)
+    {
+        var seat = _hall.Seats
+            .FirstOrDefault(s => s.Number == seatNumber);
+
+        if (seat == null || seat.Status == SeatStatus.Booked)
+            return false;
+
+        await Task.Delay(100);
+
+        seat.Status = SeatStatus.Booked;
+
+        Console.WriteLine(
+            $"{customer} считает, что забронировал место {seatNumber}");
 
         return true;
     }
@@ -42,15 +52,12 @@ public class BookingService
             .FirstOrDefault(s => s.Number == seatNumber);
 
         if (seat == null || seat.Status == SeatStatus.Free)
-        {
-            Console.WriteLine("Бронирование не найдено.");
             return false;
-        }
 
         seat.Status = SeatStatus.Free;
 
         Console.WriteLine(
-            $"{customer} отменил бронирование места {seatNumber}.");
+            $"{customer} отменил бронирование места {seatNumber}");
 
         return true;
     }

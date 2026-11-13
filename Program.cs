@@ -5,30 +5,29 @@ namespace Variant09;
 
 internal static class Program
 {
-    private static void Main()
+    private static async Task Main()
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
         Hall hall = new Hall("Большой зал", 10);
         BookingService service = new BookingService(hall);
 
-        Console.WriteLine("Система бронирования мест");
+        Console.WriteLine("Конкурентное бронирование");
         Console.WriteLine("=========================");
 
-        service.BookSeat(1, "Иван");
-        service.BookSeat(2, "Анна");
+        var tasks = Enumerable.Range(1, 5)
+            .Select(i => service.BookWithRaceCondition(
+                1, $"Пользователь {i}"));
+
+        var results = await Task.WhenAll(tasks);
 
         Console.WriteLine();
 
-        service.CancelBooking(1, "Иван");
+        Console.WriteLine(
+            $"Успешных попыток: {results.Count(x => x)}");
 
-        Console.WriteLine("\nТекущее состояние зала:");
-
-        foreach (var seat in hall.Seats)
-        {
-            Console.WriteLine(
-                $"Место {seat.Number}: {seat.Status}");
-        }
+        Console.WriteLine(
+            $"Статус места 1: {hall.Seats[0].Status}");
 
         Console.ReadLine();
     }
