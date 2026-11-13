@@ -102,4 +102,28 @@ public class BookingService
             .OrderBy(entry => entry.Timestamp)
             .ToList();
     }
+    public BookingStatistics GetStatistics()
+    {
+        var seats = GetSeatStatusesParallel();
+        var journal = GetJournal();
+
+        return new BookingStatistics
+        {
+            TotalSeats = seats.Count,
+
+            FreeSeats = seats
+                .AsParallel()
+                .Count(s => s.Status == SeatStatus.Free),
+
+            BookedSeats = seats
+                .AsParallel()
+                .Count(s => s.Status == SeatStatus.Booked),
+
+            TotalBookings = journal
+                .Count(e => e.Action == "Бронирование"),
+
+            TotalCancellations = journal
+                .Count(e => e.Action == "Отмена")
+        };
+    }
 }

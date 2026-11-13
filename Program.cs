@@ -9,38 +9,29 @@ internal static class Program
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        Hall hall = new Hall("Большой зал", 5);
-
+        Hall hall = new Hall("Большой зал", 10);
         BookingService service = new BookingService(hall);
 
-        await using var waitingList =
-            new WaitingListService(service);
+        await service.BookSeatAsync(1, "Иван");
+        await service.BookSeatAsync(2, "Анна");
+        await service.BookSeatAsync(3, "Петр");
 
-        Console.WriteLine("Очередь ожидания");
-        Console.WriteLine("================");
+        await service.CancelBookingAsync(2, "Анна");
 
-        await service.BookSeatAsync(1, "Первый клиент");
+        Console.WriteLine("Статистика бронирований");
+        Console.WriteLine("=======================");
 
-        Console.WriteLine("Первый клиент занял место.");
+        var stats = service.GetStatistics();
 
-        var waitingTask = waitingList.AddToQueueAsync(
-            1, "Второй клиент");
-
-        await Task.Delay(300);
-
-        Console.WriteLine("Второй клиент ожидает.");
-
-        await service.CancelBookingAsync(1, "Первый клиент");
-
-        Console.WriteLine("Первый клиент освободил место.");
-
-        bool result = await waitingTask.WaitAsync(
-            TimeSpan.FromSeconds(5));
+        Console.WriteLine($"Всего мест: {stats.TotalSeats}");
+        Console.WriteLine($"Свободно: {stats.FreeSeats}");
+        Console.WriteLine($"Занято: {stats.BookedSeats}");
 
         Console.WriteLine(
-            result
-                ? "Второй клиент получил место!"
-                : "Бронирование не удалось.");
+            $"Всего бронирований: {stats.TotalBookings}");
+
+        Console.WriteLine(
+            $"Всего отмен: {stats.TotalCancellations}");
 
         Console.ReadLine();
     }
