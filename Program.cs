@@ -9,24 +9,38 @@ internal static class Program
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        Hall hall = new Hall("Большой зал", 10);
+        Hall hall = new Hall("Большой зал", 5);
+
         BookingService service = new BookingService(hall);
 
-        await service.BookSeatAsync(1, "Иван");
-        await service.BookSeatAsync(2, "Анна");
-        await service.CancelBookingAsync(1, "Иван");
+        await using var waitingList =
+            new WaitingListService(service);
 
-        Console.WriteLine("\nЖурнал бронирований");
-        Console.WriteLine("===================");
+        Console.WriteLine("Очередь ожидания");
+        Console.WriteLine("================");
 
-        foreach (var entry in service.GetJournal())
-        {
-            Console.WriteLine(
-                $"{entry.Timestamp:HH:mm:ss} | " +
-                $"{entry.Action} | " +
-                $"Место: {entry.SeatNumber} | " +
-                $"Клиент: {entry.Customer}");
-        }
+        await service.BookSeatAsync(1, "Первый клиент");
+
+        Console.WriteLine("Первый клиент занял место.");
+
+        var waitingTask = waitingList.AddToQueueAsync(
+            1, "Второй клиент");
+
+        await Task.Delay(300);
+
+        Console.WriteLine("Второй клиент ожидает.");
+
+        await service.CancelBookingAsync(1, "Первый клиент");
+
+        Console.WriteLine("Первый клиент освободил место.");
+
+        bool result = await waitingTask.WaitAsync(
+            TimeSpan.FromSeconds(5));
+
+        Console.WriteLine(
+            result
+                ? "Второй клиент получил место!"
+                : "Бронирование не удалось.");
 
         Console.ReadLine();
     }

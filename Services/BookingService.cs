@@ -4,6 +4,7 @@ namespace Variant09.Services;
 
 public class BookingService
 {
+    public Action? SeatReleased { get; set; }
     private readonly Hall _hall;
     private readonly object _lockObject = new();
 
@@ -70,6 +71,8 @@ public class BookingService
                 _journal.Enqueue(
                 new BookingJournalEntry("Отмена", seatNumber, customer));
                 return true;
+
+                SeatReleased?.Invoke();
             }
         }
         finally
