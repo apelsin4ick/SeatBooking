@@ -5,49 +5,70 @@ namespace Variant09.Services;
 public class BookingService
 {
     private readonly Hall _hall;
-
     private readonly object _lockObject = new();
+
+    private readonly SemaphoreSlim _semaphore = new(3, 3);
 
     public BookingService(Hall hall)
     {
         _hall = hall;
     }
 
-    public bool BookSeat(int seatNumber, string customer)
+    public async Task<bool> BookSeatAsync(
+        int seatNumber, string customer)
     {
-        lock (_lockObject)
+        await _semaphore.WaitAsync();
+
+        try
         {
-            var seat = _hall.Seats
-                .FirstOrDefault(s => s.Number == seatNumber);
+            lock (_lockObject)
+            {
+                var seat = _hall.Seats
+                    .FirstOrDefault(s => s.Number == seatNumber);
 
-            if (seat == null || seat.Status == SeatStatus.Booked)
-                return false;
+                if (seat == null || seat.Status == SeatStatus.Booked)
+                    return false;
 
-            seat.Status = SeatStatus.Booked;
+                seat.Status = SeatStatus.Booked;
 
-            Console.WriteLine(
-                $"{customer} забронировал место {seatNumber}");
+                Console.WriteLine(
+                    $"{customer} забронировал место {seatNumber}");
 
-            return true;
+                return true;
+            }
+        }
+        finally
+        {
+            _semaphore.Release();
         }
     }
 
-    public bool CancelBooking(int seatNumber, string customer)
+    public async Task<bool> CancelBookingAsync(
+        int seatNumber, string customer)
     {
-        lock (_lockObject)
+        await _semaphore.WaitAsync();
+
+        try
         {
-            var seat = _hall.Seats
-                .FirstOrDefault(s => s.Number == seatNumber);
+            lock (_lockObject)
+            {
+                var seat = _hall.Seats
+                    .FirstOrDefault(s => s.Number == seatNumber);
 
-            if (seat == null || seat.Status == SeatStatus.Free)
-                return false;
+                if (seat == null || seat.Status == SeatStatus.Free)
+                    return false;
 
-            seat.Status = SeatStatus.Free;
+                seat.Status = SeatStatus.Free;
 
-            Console.WriteLine(
-                $"{customer} отменил бронирование места {seatNumber}");
+                Console.WriteLine(
+                    $"{customer} отменил место {seatNumber}");
 
-            return true;
+                return true;
+            }
+        }
+        finally
+        {
+            _semaphore.Release();
         }
     }
 }

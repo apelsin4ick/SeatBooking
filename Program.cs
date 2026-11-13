@@ -12,12 +12,12 @@ internal static class Program
         Hall hall = new Hall("Большой зал", 10);
         BookingService service = new BookingService(hall);
 
-        Console.WriteLine("Проверка защиты через lock");
-        Console.WriteLine("==========================");
+        Console.WriteLine("Проверка SemaphoreSlim");
+        Console.WriteLine("======================");
 
-        var tasks = Enumerable.Range(1, 5)
-            .Select(i => Task.Run(() =>
-                service.BookSeat(1, $"Пользователь {i}")));
+        var tasks = Enumerable.Range(1, 10)
+            .Select(i => service.BookSeatAsync(
+                i, $"Пользователь {i}"));
 
         var results = await Task.WhenAll(tasks);
 
@@ -25,9 +25,6 @@ internal static class Program
 
         Console.WriteLine(
             $"Успешных бронирований: {results.Count(x => x)}");
-
-        Console.WriteLine(
-            $"Статус места: {hall.Seats[0].Status}");
 
         Console.ReadLine();
     }
