@@ -13,18 +13,19 @@ internal static class Program
         BookingService service = new BookingService(hall);
 
         await service.BookSeatAsync(1, "Иван");
-        await service.BookSeatAsync(3, "Анна");
-        await service.BookSeatAsync(5, "Петр");
+        await service.BookSeatAsync(2, "Анна");
+        await service.CancelBookingAsync(1, "Иван");
 
-        Console.WriteLine("Параллельная проверка мест");
-        Console.WriteLine("==========================");
+        Console.WriteLine("\nЖурнал бронирований");
+        Console.WriteLine("===================");
 
-        var seats = service.GetSeatStatusesParallel();
-
-        foreach (var seat in seats)
+        foreach (var entry in service.GetJournal())
         {
             Console.WriteLine(
-                $"Место {seat.Number}: {seat.Status}");
+                $"{entry.Timestamp:HH:mm:ss} | " +
+                $"{entry.Action} | " +
+                $"Место: {entry.SeatNumber} | " +
+                $"Клиент: {entry.Customer}");
         }
 
         Console.ReadLine();

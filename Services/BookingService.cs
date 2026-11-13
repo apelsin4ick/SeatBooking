@@ -1,5 +1,5 @@
 ﻿using Variant09.Models;
-
+using System.Collections.Concurrent;
 namespace Variant09.Services;
 
 public class BookingService
@@ -8,6 +8,8 @@ public class BookingService
     private readonly object _lockObject = new();
 
     private readonly SemaphoreSlim _semaphore = new(3, 3);
+
+    private readonly ConcurrentQueue<BookingJournalEntry> _journal = new();
 
     public BookingService(Hall hall)
     {
@@ -33,7 +35,9 @@ public class BookingService
 
                 Console.WriteLine(
                     $"{customer} забронировал место {seatNumber}");
-
+                
+                _journal.Enqueue(
+                new BookingJournalEntry("Бронирование", seatNumber, customer));
                 return true;
             }
         }
@@ -62,7 +66,9 @@ public class BookingService
 
                 Console.WriteLine(
                     $"{customer} отменил место {seatNumber}");
-
+                
+                _journal.Enqueue(
+                new BookingJournalEntry("Отмена", seatNumber, customer));
                 return true;
             }
         }
@@ -84,6 +90,13 @@ public class BookingService
         return snapshot
             .AsParallel()
             .OrderBy(seat => seat.Number)
+            .ToList();
+    }
+    public List<BookingJournalEntry> GetJournal()
+    {
+        return _journal
+            .ToArray()
+            .OrderBy(entry => entry.Timestamp)
             .ToList();
     }
 }
