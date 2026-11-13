@@ -12,19 +12,20 @@ internal static class Program
         Hall hall = new Hall("Большой зал", 10);
         BookingService service = new BookingService(hall);
 
-        Console.WriteLine("Проверка SemaphoreSlim");
-        Console.WriteLine("======================");
+        await service.BookSeatAsync(1, "Иван");
+        await service.BookSeatAsync(3, "Анна");
+        await service.BookSeatAsync(5, "Петр");
 
-        var tasks = Enumerable.Range(1, 10)
-            .Select(i => service.BookSeatAsync(
-                i, $"Пользователь {i}"));
+        Console.WriteLine("Параллельная проверка мест");
+        Console.WriteLine("==========================");
 
-        var results = await Task.WhenAll(tasks);
+        var seats = service.GetSeatStatusesParallel();
 
-        Console.WriteLine();
-
-        Console.WriteLine(
-            $"Успешных бронирований: {results.Count(x => x)}");
+        foreach (var seat in seats)
+        {
+            Console.WriteLine(
+                $"Место {seat.Number}: {seat.Status}");
+        }
 
         Console.ReadLine();
     }

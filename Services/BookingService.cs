@@ -70,5 +70,20 @@ public class BookingService
         {
             _semaphore.Release();
         }
+
+    }
+    public List<Seat> GetSeatStatusesParallel()
+    {
+        Seat[] snapshot;
+
+        lock (_lockObject)
+        {
+            snapshot = _hall.Seats.ToArray();
+        }
+
+        return snapshot
+            .AsParallel()
+            .OrderBy(seat => seat.Number)
+            .ToList();
     }
 }
